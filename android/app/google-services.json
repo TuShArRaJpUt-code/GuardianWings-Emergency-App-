@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "660185862853",
+    "firebase_url": "https://her-6d883-default-rtdb.firebaseio.com",
+    "project_id": "her-6d883",
+    "storage_bucket": "her-6d883.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660185862853:android:6c39c6bba18f43d9d016ac",
+        "android_client_info": {
+          "package_name": "com.example.guradian_angel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnT0KjLAALxUkj8UF78r8xTtt79oOr9Ns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660185862853:android:5ab5047dd5394c83d016ac",
+        "android_client_info": {
+          "package_name": "com.firstkotlinproject.guardianwings"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnT0KjLAALxUkj8UF78r8xTtt79oOr9Ns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
