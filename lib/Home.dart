@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'Blue_Tooth.dart';
 import 'upper.dart';
 import 'lower.dart';
 import 'call.dart';
@@ -22,12 +23,30 @@ class HomeState extends State<Home> {
   final AudioRecorderService _audioRecorder = AudioRecorderService();
   Portal portal = Portal();
 
+
   @override
   void initState() {
     super.initState();
     loadUserData();
     loadDarkModeStatus();
     loadShowSOSStatus(); // 👈 Load SOS button state
+    listenToESP32();
+  }
+
+  void listenToESP32() {
+    bluetoothService.messages.listen((message) {
+      String cleanMsg = message.trim();
+
+      print("Received: $cleanMsg");
+
+      if (cleanMsg == "Button Pressed!") {
+        triggerSOS();
+      }
+
+      if (cleanMsg == "SAFE") {
+        stopSOS();
+      }
+    });
   }
 
   // 🔹 Load dark mode
@@ -83,10 +102,36 @@ class HomeState extends State<Home> {
   }
 
 
+
+
   // 🔹 Save _showSOS state
   Future<void> saveShowSOSStatus(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool("showSOS", value);
+  }
+
+  Future<void> triggerSOS() async {
+    await _audioRecorder.startRecording();
+    await sendWhatsappFallback();
+    await openDialPad('112');
+
+    setState(() {
+      _showSOS = true;
+    });
+
+    await saveShowSOSStatus(true);
+    portal.startSOS();
+  }
+
+  Future<void> stopSOS() async {
+    await _audioRecorder.stopRecording();
+
+    setState(() {
+      _showSOS = false;
+    });
+
+    await saveShowSOSStatus(false);
+    await portal.stopSOS();
   }
 
   @override
@@ -169,14 +214,7 @@ class HomeState extends State<Home> {
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: ElevatedButton(
-                            onPressed: () async {
-                              await _audioRecorder.stopRecording();
-                              setState(() {
-                                _showSOS = false; // back to SOS image
-                              });
-                              await saveShowSOSStatus(false); // update SharedPreferences
-                              await portal.stopSOS(); // stop updating Firebase
-                            },
+                            onPressed: stopSOS,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               padding: const EdgeInsets.symmetric(
@@ -198,16 +236,7 @@ class HomeState extends State<Home> {
                         )
                             : InkWell(
                           key: const ValueKey('sosImage'),
-                          onTap: () async {
-                            await _audioRecorder.startRecording();
-                            await sendWhatsappFallback();
-                            await openDialPad('112');
-                            setState(() {
-                              _showSOS = true; // switch to "Are You Safe?" button
-                            });
-                            await saveShowSOSStatus(true); // update SharedPreferences
-                            portal.startSOS(); // start updating Firebase
-                          },
+                          onTap: triggerSOS,
                           child: Container(
                             height: 150,
                             width: 150,

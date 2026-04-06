@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:guradian_angel/Account.dart';
 import 'package:guradian_angel/TermsNCondition.dart';
 import 'package:guradian_angel/about.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'Blue_Tooth.dart';
 import 'Lower.dart';
 import 'main.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,6 +22,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic> userData = {};
   bool darkMode = false;
   double _opacity = 0.0;
+
+
+
+  List<BluetoothDevice> devices = [];
+  BluetoothDevice? connectedDevice;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -218,6 +226,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final Color cardColor = darkMode ? const Color(0xFF2C2C2C) : Colors.grey.shade100;
     final Color sectionTextColor = darkMode ? Colors.white : Colors.black87;
 
+
+
     return Scaffold(
       backgroundColor: sectionBgColor, // keep overall background white
       body: SafeArea(
@@ -281,6 +291,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
+
+                        buildCardItem(
+                          icon: Icons.bluetooth,
+                          iconColor: iconColor,
+                          text: 'Bluetooth',
+                          cardColor: cardColor,
+                          textColor: sectionTextColor,
+                          onTap: () async {
+                            setState(() => isLoading = true);
+
+                            await bluetoothService.initBluetooth();
+
+                            List<BluetoothDevice> bonded =
+                            await bluetoothService.getPairedDevices();
+
+                            setState(() {
+                              devices = bonded;
+                              isLoading = false;
+                            });
+                          },
+                        ),
+
+                        isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : devices.isEmpty
+                            ? const Text("No paired devices found")
+                            : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: devices.length,
+                          itemBuilder: (context, index) {
+                            final device = devices[index];
+
+                            return Card(
+                              child: ListTile(
+                                title: Text(device.name ?? "Unknown"),
+                                subtitle: Text(device.address),
+                                trailing: connectedDevice?.address == device.address
+                                    ? const Icon(Icons.check_circle, color: Colors.green)
+                                    : const Icon(Icons.bluetooth),
+                                onTap: () async {
+                                  bool connected =
+                                  await bluetoothService.connect(device);
+
+                                  if (connected) {
+                                    setState(() {
+                                      connectedDevice = device;
+                                    });
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                        Text("Connected to ${device.name}"),
+                                      ),
+                                    );
+
+
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text("Connection Failed")),
+                                    );
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+
 
                         buildCardItem(
                           icon: Icons.store_mall_directory,
